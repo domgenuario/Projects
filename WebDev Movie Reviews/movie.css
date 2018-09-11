@@ -1,0 +1,142 @@
+/*Dom Genuario
+366.02
+Lab6
+This will describe the layout and appearance of the web page.*/
+
+/*This sets the background image with margins to set to 0 all around*/
+body {
+  background-image: url("http://cs.millersville.edu/~sschwartz/366/HTML_CSS_Lab/Images/background.png");
+  margin: 0;
+}
+
+/*This centers the banner at the top of the page and the header of the page.*/
+#rancidTomatoes, h1 {
+  text-align: center;
+} 
+
+/*This repeats the image of bannerbg on both sides behing the banner image to reach the edges of the page. */
+#rancidTomatoes {
+  background-image: url("http://cs.millersville.edu/~sschwartz/366/HTML_CSS_Lab/Images/bannerbg.png");
+  background-repeat: repeat-x, repeat-y;
+}
+
+/*This sets the TMNT (2007) image to the center and sets the font styles and text shadow.*/
+h1 {
+  font-size: 24pt;
+  font-family: Tahoma, Verdana, sans-serif;
+  text-shadow: 3px 3px #999999;
+}
+
+/*This sets the border of the overall area.*/
+.bodyInfo {
+  border-radius: 20px;
+  border: 4px solid gray;
+  margin: auto; 
+  width: 800px;
+  overflow: hidden;
+}
+
+/*This sets the border, background color, padding and font styles to all reviews */
+.review1, .review2 {
+  border-radius: 10px;
+  border: 2px solid gray;
+  background-color: #E8DC9B;
+  padding: 8px;
+  font-size: 8pt;
+}
+
+/*This sets left center area of the overall section to 550px with an absolute position.*/
+#review, #rotten {
+  width: 550px;
+  position: absolute;
+}
+
+/*This sets both columns to a width of 47% with a padding of 2%*/
+.column1, .column2 {
+  width: 47%;
+  padding: 2%;
+}
+
+/*This floats the column of reviews, the critic image and the headericon to the left.*/
+.column1, .critic, .headericon {
+  float: left;
+}
+
+/*This has a relative position and floats the column of reviews to the right.*/
+.column2 {
+  position: relative;
+  float: right;
+
+}
+
+/*This will set a margin of 5px for the critic image.*/
+.critic {
+  margin-right: 5px;
+}
+
+/*This gives a padding between the name information of the critic and the next review box.*/
+.name {
+  padding-bottom: 20pt;
+}
+
+/*This aligns the "rotten" or "fresh" image to the top of the text 
+box with a margin of 5px.*/
+.headericon { 
+  margin: 5px;
+  vertical-align: text-top;
+}
+
+/*This sets the background image of rbg.png and repeats it all the way across. 
+It also sets the 33% to bold red and font size of 48.*/
+.rotten {
+  background-image: url("http://cs.millersville.edu/~sschwartz/366/HTML_CSS_Lab/Images/rbg.png");
+  background-repeat: repeat-x;
+  height: 83px;
+  font-family: Arial;
+  font-size: 48pt;
+  color: red;
+}
+
+
+/*This sets the General Overview image and the general overview information to the right inside the border.
+The text has font arial and font size of 8pt. This section takes up 250px.*/
+.generalOverview {
+  float: right;
+  background-color:  #A2B964;
+  width: 250px;
+  font-family: Arial;
+  font-size: 8pt;
+}
+
+
+
+/*Sets a padding between each of the overviews and the left side of the overviews.*/
+dt {
+  padding-top: 10pt;
+  padding-left: 10pt;
+}
+
+/*This sets the font to bold for dl, the 33%, and all reviews.*/
+dt, .rotten, .review1, .review2, h1{
+  font-weight: bold;
+}
+
+
+/*This aligns the page information to the center of page with a green background.*/
+.page {
+  text-align: center;
+  padding: 5px;
+  background-color:  #A2B964;
+  margin: 0;
+}
+
+.page, .generalOverview {
+  clear: right;
+}
+/*This pushes the validators to the right of the page with an opacity of 50%. */
+.w3 {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  opacity: 0.5;
+}

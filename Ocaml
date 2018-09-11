@@ -1,0 +1,196 @@
+(* CSCI 330: Programming Assignment 5
+ * misc5.ml
+ Dom Genuario
+ Lab 5
+ *)
+
+(* For this assignment, you may use the following library functions:
+
+   List.map
+   List.fold_left
+   List.fold_right
+   List.split
+   List.combine
+   List.length
+   List.append
+   List.rev
+
+   See http://caml.inria.fr/pub/docs/manual-ocaml/libref/List.html for
+   documentation.
+*)
+
+
+
+(* Do not change the skeleton code! The point of this assignment is to figure
+ * out how the functions can be written this way (using fold). You may only
+ * replace the   failwith "to be implemented"   part. *)
+
+
+
+(*****************************************************************)
+(******************* 1. Warm Up   ********************************)
+(*****************************************************************)
+
+(* val sqsum : int list -> int = <fun>
+  This function takes in a list of integers [x1;...;xn]
+  and uses List.fold_left to return the integer x1^2+...+xn^2.
+  Ex. # sqsum [];;
+  - : int = 0
+  Ex. # sqsum [1;2;3;4];;
+  - : int = 30
+*)
+
+let sqsum xs = 
+  let f a x = (x*x) + a in
+  let base = 0 in
+    List.fold_left f base xs
+
+
+(* val pipe : ('a -> 'a) list -> 'a -> 'a = <fun>
+  This function takes in a list of functions [f1;...;fn] and
+  returns a function f such that for any x, the application f x returns
+  the result fn(...(f2(f1 x))). It will use List.fold_left to return 
+  the result.
+  Ex. # pipe [] 3;;
+  - : int = 3
+  Ex. # pipe [(fun x-> 2*x); (fun x -> x+3)] 3;;
+  - : int = 9
+*)
+
+let pipe fs s = 
+  let f a x = (x a) in
+  let base = s in
+    List.fold_left f base fs
+
+
+(* val pipec : ('a -> 'a) list -> 'a -> 'a = <fun>
+  This function has the same behavior as the function pipe
+  but it uses function currying. It does not explicitly take
+  in the second parameter but will return a function that expects it.
+  This function will also use List.fold_left to return the result
+  Ex. Ex. # pipe [] 3;;
+  - : int = 3
+  Ex. # pipe [(fun x-> 2*x); (fun x -> x+3)] 3;;
+  - : int = 9
+*)
+
+let pipec fs = 
+  let f a x = fun y -> (x (a y)) in
+  let base = fun s -> s in
+    List.fold_left f base fs
+
+(* val sepConcat : string -> string list -> string = <fun>
+  This function is a curried function that takes in a string
+  and a list of strings [s1;...;sn]. This function will use List.fold_left
+  to return the concatenation of s1 sep s2 ... sep sn.
+  Ex. # sepConcat "---" [];;
+  - : string = ""
+  Ex. # sepConcat "X" ["hello"];;
+  - : string = "hello"
+  Ex. # sepConcat ", " ["foo";"bar";"baz"];;
+  - : string = "foo, bar, baz"
+*)
+
+let rec sepConcat sep sl = match sl with 
+  | [] -> ""
+  | h :: t -> 
+      let f a x = a^sep^x in
+      let base = h in
+      let l = t in
+        List.fold_left f base l
+
+
+(* val stringOfList : ('a -> string) -> 'a list -> string = <fun>
+  This function takes in a function and a list [l1;l2;...;ln]
+  This function will use functions sepConcat and List.map to return 
+  the list as a concatenation of the following 
+  "[" (f l1) ";" (f l2) ";" ... ";" (f ln) "]"
+  Ex. # stringOfList string_of_int [1;2;3;4;5;6];;
+  - : string = "[1; 2; 3; 4; 5; 6]"
+  Ex. # stringOfList (fun x -> x) ["foo"];;
+  - : string = "[foo]"
+  Ex. # stringOfList (stringOfList string_of_int) [[1;2;3];[4;5];[6];[]];;
+  - : string = "[[1; 2; 3]; [4; 5]; [6]; []]"
+*)
+
+let stringOfList f l = "[" ^ sepConcat "; " (List.map f l) ^ "]";;
+
+
+(* val prodLists : int list -> int list -> int list = <fun>
+  This function takes in two lists of integers [x1;...;xn] and [y1;...;yn]
+  It will use List.fold_left to return the list of the form 
+  [x1*y1;...;xn*yn]
+  Ex. # prodLists [] [];;
+  - : int list = []
+  Ex. # prodLists [10; 20; 30] [5; 5; 5];;
+  - : int list = [50; 100; 150]
+*)
+
+let prodLists l1 l2 =
+  let f a x = a @ ((fst x) * (snd x))::[] in
+  let base = [] in
+  let args = List.combine l1 l2 in
+    List.fold_left f base args
+  
+
+
+(*****************************************************************)
+(******************* 2. Big Numbers ******************************)
+(*****************************************************************)
+
+(* clone : 'a -> int -> 'a list 
+
+clone takes as input x and an integer n. The result is a list of length n, where each element is x. 
+If n is 0 or negative, clone will return the empty list. 
+
+# clone 3 5;;
+- : int list = [3; 3; 3; 3; 3] 
+# clone "foo" 2;;
+- : string list = ["foo"; "foo"]
+# clone clone (-3);;
+- : ('_a -> int -> '_a list) list = [])
+*)
+let rec clone x n = if (n <= 0) then [] else x::(clone x (n - 1))
+
+(*
+padZero : int list -> int list -> int list * int list 
+
+padZero takes two lists: [x1,...,xn] [y1,...,ym] and adds zeros in front to make the lists equal in length. 
+
+# padZero [9;9] [1;0;0;2];;
+- : int list * int list = ([0;0;9;9],[1;0;0;2]) 
+# padZero [1;0;0;2] [9;9];;
+- : int list * int list = ([1;0;0;2],[0;0;9;9]) 
+*)
+let rec padZero l1 l2 = 
+   let l1len = List.length l1 in
+   let l2len = List.length l2 in
+    ((clone 0 (l2len-l1len)@l1), (clone 0 (l1len-l2len)@l2))
+
+(*
+removeZero : int list -> int list 
+
+removeZero takes a list and removes a prefix of trailing zeros. 
+
+# removeZero [0;0;0;1;0;0;2];;
+- : int list = [1;0;0;2] 
+# removeZero [9;9];;
+- : int list = [9;9] 
+# removeZero [0;0;0;0];;
+- : int list = [] 
+*)
+
+let rec removeZero l = 
+  match l with
+  | 0::t -> removeZero t
+  | _ -> l
+
+(* val bigAdd : int list -> int list -> int list
+  This function takes in two integer lists, where each integer
+  is in the range [0..9] and uses List.fold_left to return a list 
+  corresponding to the addition of the two big integers
+  Ex. # bigAdd [9;9] [1;0;0;2]
+  - : int list = [1;1;0;1]
+  Ex. # bigAdd [9;9;9;9] [9;9;9]
+  - : int list = [1;0;9;9;8]
+*)

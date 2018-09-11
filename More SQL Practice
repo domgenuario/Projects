@@ -1,0 +1,195 @@
+/* This lab focuses mostly on many-to-many relationships */
+
+
+/* PROBLEM 1 BEGIN 
+(30 pts) Write and execute SQL statements to create the tables described above. Remember that
+you will need foreign key constraints to capture the one- and many-to-many relationships. You
+may need to drop your existing track, label, and cd tables. You can refer to the insert statements
+for more information on data types. The URL for the insert statements is:
+http://www.cs.millersville.edu/~schwartz/466/Labs/Chap5CDinserts.txt The provided insert
+statements will work if you’ve constructed the tables as shown (with columns created in the same
+order they appear.
+*/
+
+CREATE TABLE person (
+psnid        INTEGER,
+psnfname    VARCHAR(10),
+psnlname    VARCHAR(10),
+    PRIMARY KEY(psnid));
+
+CREATE TABLE label (
+lbltitle    VARCHAR(10),
+lblstreet    VARCHAR(25),
+lblcity         VARCHAR(10),
+lblstate    VARCHAR(3),
+lblpostcode    INTEGER,
+lblnation    VARCHAR(30),
+    PRIMARY KEY(lbltitle));
+
+CREATE TABLE composition (
+compid        INTEGER,
+comptitle    VARCHAR(30),
+compyear    INTEGER,
+    PRIMARY KEY(compid));
+
+CREATE TABLE cd (
+cdid        INTEGER,
+cdlblid        VARCHAR(10),
+cdtitle        VARCHAR(15),
+cdyear        INTEGER,
+lbltitle    VARCHAR(10),
+    PRIMARY KEY(cdid),
+    CONSTRAINT fk_has_label FOREIGN KEY(lbltitle) REFERENCES label(lbltitle));
+
+CREATE TABLE person_cd (
+psncdorder    INTEGER,
+psnid        INTEGER,
+cdid        INTEGER,
+    PRIMARY KEY(psnid, cdid),
+    CONSTRAINT fk_has_person FOREIGN KEY(psnid) REFERENCES person(psnid),
+    CONSTRAINT fk_has_cd FOREIGN KEY(cdid) REFERENCES cd(cdid));
+
+CREATE TABLE person_composition (
+psncomprole    VARCHAR(5),
+psncomporder    INTEGER,
+psnid        INTEGER,
+compid        INTEGER,
+    PRIMARY KEY(psncomprole, psnid, compid),
+    CONSTRAINT fk_has_person1 FOREIGN KEY(psnid) REFERENCES person(psnid),
+    CONSTRAINT fk_has_composition2 FOREIGN KEY(compid) REFERENCES composition(compid));
+
+CREATE TABLE recording (
+rcdid        INTEGER,
+rcdlength    DECIMAL(3,2),
+rcddate        DATE,
+compid        INTEGER,
+    PRIMARY KEY(rcdid, compid),
+    CONSTRAINT fk_has_composition3 FOREIGN KEY(compid) REFERENCES composition(compid));
+
+CREATE TABLE track (
+cdid        INTEGER,
+trknum        INTEGER,
+rcdid        INTEGER,
+compid        INTEGER,
+    PRIMARY KEY(cdid, compid, trknum),
+    CONSTRAINT fk_has_cd5 FOREIGN KEY(cdid) REFERENCES cd(cdid),
+    CONSTRAINT fk_has_recording FOREIGN KEY(rcdid, compid) REFERENCES recording(rcdid, compid));
+
+CREATE TABLE person_recording (
+psnrcdrole    VARCHAR(10),
+psnid        INTEGER,
+rcdid        INTEGER,
+compid        INTEGER,
+    PRIMARY KEY(psnrcdrole, psnid, rcdid, compid),
+    CONSTRAINT fk_has_person5 FOREIGN KEY(psnid) REFERENCES person(psnid),
+    CONSTRAINT fk_has_recording5 FOREIGN KEY(rcdid, compid) REFERENCES recording(rcdid, compid));
+
+/* PROBLEM 1 END */
+
+
+/* PROBLEM 2 BEGIN 
+(10 pts) Write a SQL query to list the track number and composition title of all of the tracks on
+Giant Steps (be sure that you’re using the key of the table to do this, and don’t hardcode the key).
+Columns should be trknum and comptitle.
+*/
+
+SELECT trknum, comptitle 
+FROM track 
+JOIN composition 
+ON composition.compid = track.compid
+JOIN cd ON cd.cdid = track.cdid
+WHERE cdtitle = 'Giant Steps';
+
+/* PROBLEM 2 END */
+
+
+/* PROBLEM 3 BEGIN 
+(15 pts) Write a SQL query to list the first and last names of the musicians and the instruments
+they played for the May 4, 1959 recording of ‘Giant Steps’. Columns should be psnfname,
+psnlname, psnrcdrole.
+*/
+
+SELECT psnfname, psnlname, psnrcdrole 
+FROM person
+JOIN person_recording ON person_recording.psnid = person.psnid
+JOIN recording ON recording.rcdid = person_recording.rcdid
+JOIN composition ON composition.compid = recording.compid
+WHERE comptitle = 'Giant Steps' 
+AND rcddate = '1959-05-04';
+
+/* PROBLEM 3 END */
+
+
+/* PROBLEM 4 BEGIN 
+(15 pts) Write a SQL query to list the composers who write music and play tenor sax. Each
+person should only be listed once in the results. Columns should be psnfname, psnlname.
+*/
+
+SELECT psnfname, psnlname
+FROM person 
+JOIN person_recording ON person_recording.psnid = person.psnid
+JOIN person_composition ON person_composition.psnid = person_recording.psnid
+WHERE psnrcdrole = 'tenor sax' 
+GROUP BY psnrcdrole;
+
+/* PROBLEM 4 END */
+
+
+/* PROBLEM 5 BEGIN 
+(15 pts) List the name, track number and cdtitle of any compositions where the same composition
+appears as multiple tracks on a CD. Sort the data by composition title and track number. Note
+that this should include two different recordings of the same composition (so Countdown should
+be in your results). Columns should be comptitle, trknum, cdtitle.
+*/
+
+SELECT comptitle, trknum, cdtitle
+FROM composition 
+JOIN recording ON recording.compid = composition.compid
+JOIN track ON track.compid = recording.compid
+JOIN cd ON cd.cdid = track.cdid 
+WHERE composition.compid IN
+
+    (SELECT compid
+    FROM track 
+    WHERE cd.cdid = track.cdid
+    GROUP BY compid
+    HAVING COUNT(trknum) > 1)
+
+GROUP BY comptitle, trknum;
+
+/* PROBLEM 5 END */
+
+
+/* PROBLEM 6 BEGIN 
+(8 pts) Write a SQL query to list the recording id and recording date of all recordings that appear
+on all of the cds in the cd table. Write the query using EXISTS. Columns should be rcdid and
+rcddate.
+*/
+
+SELECT recording.rcdid, rcddate
+FROM recording WHERE NOT EXISTS 
+(SELECT * 
+FROM cd
+WHERE NOT EXISTS
+(SELECT * 
+FROM track
+WHERE track.rcdid = recording.rcdid
+AND track.cdid = cd.cdid)); 
+
+/* PROBLEM 6 END */
+
+
+/* PROBLEM 7 BEGIN 
+(7 pts) Write a SQL query to return the same results as in the previous question, but do NOT use
+EXISTS.
+*/
+
+SELECT recording.rcdid, rcddate 
+FROM recording 
+JOIN track ON track.rcdid = recording.rcdid
+JOIN cd ON cd.cdid = track.cdid
+GROUP BY recording.rcdid
+HAVING COUNT(DISTINCT cd.cdid) = (SELECT COUNT(cdid) FROM cd);
+
+/* PROBLEM 7 END */
+
